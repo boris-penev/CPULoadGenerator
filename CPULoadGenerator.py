@@ -33,9 +33,9 @@ class MonitorThread(threading.Thread):
         
     def run(self):
         p = psutil.Process(os.getpid())
-        p.set_cpu_affinity([0]) #the process is forced to run only on CPU 0
+        p.cpu_affinity([0]) #the process is forced to run only on CPU 0
         while self.running:
-            self.sample = p.get_cpu_percent(interval=self.interval)
+            self.sample = p.cpu_percent(interval=self.interval)
             self.cpu = self.alpha * self.sample + (1-self.alpha)*self.cpu
             self.cpu_log.append(self.cpu)
 
