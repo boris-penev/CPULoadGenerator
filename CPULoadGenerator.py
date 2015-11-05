@@ -17,7 +17,7 @@ class Options(usage.Options):
             ["CPU load", "l", 0.2, None, float],
             ["duration", "d", 20, None, float],
         ]
-        
+
 class MonitorThread(threading.Thread):
     def __init__(self):
         self.interval = 0.1;
@@ -27,10 +27,10 @@ class MonitorThread(threading.Thread):
         self.alpha = 0.1;
         self.cpu_log = list()
         super(MonitorThread, self).__init__()
-        
+
     def get_cpu_load(self):
         return self.cpu
-        
+
     def run(self):
         p = psutil.Process(os.getpid())
         p.cpu_affinity([0]) #the process is forced to run only on CPU 0
@@ -51,37 +51,37 @@ class ControllerThread(threading.Thread):
         self.int_err = 0;
         self.last_ts = time.time();
         super(ControllerThread, self).__init__()
-        
+
     def getSleepTime(self):
         return self.sleepTime
 
     def getCpuTarget(self):
         return self.CT
 
-    def setCpu(self, cpu): 
+    def setCpu(self, cpu):
        self.cpu = cpu
 
-    def setCpuTarget(self, CT): 
+    def setCpuTarget(self, CT):
        self.CT = CT
-     
+
     def run(self):
         #through this timer this cycle has the same sampling interval as the cycle in MonitorThread
         while self.running:
            time.sleep(0.1)
            self.err = self.CT - self.cpu*0.01
            ts = time.time()
-           
+
            samp_int = ts - self.last_ts
            self.int_err = self.int_err + self.err*samp_int
            self.last_ts = ts
            self.sleepTime = self.kp*self.err + self.ki*self.int_err
-           
-           
+
+
            if self.sleepTime < 0:
               self.sleepTime = 0;
               self.int_err = self.int_err - self.err*samp_int
-              
-               
+
+
 if __name__ == "__main__":
 
     import sys
@@ -93,12 +93,12 @@ if __name__ == "__main__":
         print '%s: Try --help for usage details.' % (sys.argv[0])
         sys.exit(1)
     else:
-        if options['CPU load'] < 0 or options['CPU load'] > 1: 
+        if options['CPU load'] < 0 or options['CPU load'] > 1:
             raise(ValueError, "CPU load setpoint out of the range [0,1]")
-        if options['duration'] < 0: 
+        if options['duration'] < 0:
             raise(ValueError, "Invalid negative duration")
-                
-    monitor = MonitorThread()       
+
+    monitor = MonitorThread()
     monitor.start()
 
     SAMPLES=1000;
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     a1 = deque([0]*SAMPLES)
     target = deque([0]*SAMPLES)
     tempoReale = deque([0]*SAMPLES)
-        
+
     x = plt.axes(xlim=(0, options['duration']), ylim=(0, 100))
 
     line1, = plt.plot(a1)
@@ -123,7 +123,7 @@ if __name__ == "__main__":
 
     plt.xlabel('Time(sec)')
     plt.ylabel('CPU load [0] %')
-    
+
     while tempo < options['duration']:
 
         for i in range(1,2):
@@ -132,7 +132,7 @@ if __name__ == "__main__":
         control.setCpu(monitor.get_cpu_load())
         sleep_time = control.getSleepTime()
         time.sleep(sleep_time)
-        
+
         ts = time.time()
         delta = ts - last_ts
         last_ts = ts
